@@ -37,12 +37,34 @@ Add the server to your MCP client configuration (Claude Desktop, Claude Code, et
 }
 ```
 
+### With 1Password CLI
+
+Use the `op` CLI to inject credentials from 1Password instead of storing keys in plaintext. Create a 1Password item (e.g. `mcp-datadog` in your `Employee` vault) with `api_key` and `app_key` fields, then configure:
+
+```json
+{
+  "mcpServers": {
+    "datadog": {
+      "command": "/opt/homebrew/bin/op",
+      "args": ["run", "--", "node", "/path/to/mcp-server-datadog/dist/index.js"],
+      "env": {
+        "DD_API_KEY": "op://Employee/mcp-datadog/api_key",
+        "DD_APP_KEY": "op://Employee/mcp-datadog/app_key",
+        "DD_SITE": "datadoghq.com"
+      }
+    }
+  }
+}
+```
+
+The `op run --` wrapper resolves `op://` references at runtime, so no secrets are stored on disk.
+
 ## Environment Variables
 
 | Variable | Required | Description |
 |---|---|---|
-| `DD_API_KEY` | Yes | Datadog API key |
-| `DD_APP_KEY` | Yes | Datadog Application key (user-scoped) |
+| `DD_API_KEY` | Yes | Datadog API key (or `op://` reference) |
+| `DD_APP_KEY` | Yes | Datadog Application key, user-scoped (or `op://` reference) |
 | `DD_SITE` | No | Datadog site (default: `datadoghq.com`) |
 
 ## Available Tools
@@ -67,6 +89,30 @@ Add the server to your MCP client configuration (Claude Desktop, Claude Code, et
 |---|---|
 | `investigate_service` | Guided service health investigation workflow (monitors, errors, latency) |
 | `dd_query_syntax` | Datadog query syntax reference card for logs, metrics, and spans |
+
+## Claude Code Tool Whitelist
+
+All tools are read-only. To auto-approve them in Claude Code, add to `~/.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "mcp__datadog__list_monitors",
+      "mcp__datadog__get_monitor",
+      "mcp__datadog__list_services",
+      "mcp__datadog__list_metrics",
+      "mcp__datadog__get_metric_tags",
+      "mcp__datadog__query_metrics",
+      "mcp__datadog__search_logs",
+      "mcp__datadog__aggregate_logs",
+      "mcp__datadog__get_log_field_values",
+      "mcp__datadog__list_spans",
+      "mcp__datadog__get_trace"
+    ]
+  }
+}
+```
 
 ## Required Datadog Permissions
 
