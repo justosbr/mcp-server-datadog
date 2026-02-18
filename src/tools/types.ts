@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { client } from "@datadog/datadog-api-client";
 
+export interface OrgRegistry {
+  orgs: string[];
+  defaultOrg: string;
+  configs: Map<string, client.Configuration>;
+}
+
 export interface ToolDefinition {
   name: string;
   description: string;
@@ -20,3 +26,10 @@ export const FORMAT_SCHEMA = z
   .enum(["summary", "json"])
   .default("summary")
   .describe("Output format: 'summary' for concise LLM-friendly output, 'json' for full detail");
+
+export function createOrgSchema(orgs: string[], defaultOrg: string) {
+  return z
+    .enum(orgs as [string, ...string[]])
+    .default(defaultOrg)
+    .describe("Datadog organization to query");
+}
