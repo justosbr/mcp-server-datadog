@@ -4,7 +4,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { validateEnv, createDatadogConfig } from "./config.js";
+import { validateMultiOrgEnv } from "./config.js";
+import { createOrgSchema } from "./tools/types.js";
 
 // Import all tools
 import { listMonitors } from "./tools/list-monitors.js";
@@ -23,9 +24,9 @@ import { getTrace } from "./tools/get-trace.js";
 import { investigateServicePrompt } from "./prompts/investigate-service.js";
 import { ddQuerySyntaxPrompt } from "./prompts/dd-query-syntax.js";
 
-// Validate env and create config
-const env = validateEnv();
-const config = createDatadogConfig(env);
+// Validate env and create org configs
+const multiOrg = validateMultiOrgEnv();
+const orgSchema = createOrgSchema(multiOrg.orgs, multiOrg.defaultOrg);
 
 // Create MCP server
 const server = new McpServer({
@@ -49,9 +50,18 @@ const tools = [
 ];
 
 for (const tool of tools) {
-  server.tool(tool.name, tool.description, tool.schema, (params) =>
-    tool.handler(params as Record<string, unknown>, config) as Promise<CallToolResult>
-  );
+  const schemaWithOrg = { ...tool.schema, org: orgSchema };
+  server.tool(tool.name, tool.description, schemaWithOrg, (params) => {
+    const orgName = (params.org as string) ?? multiOrg.defaultOrg;
+    const config = multiOrg.configs.get(orgName);
+    if (!config) {
+      return Promise.resolve({
+        content: [{ type: "text" as const, text: `Unknown org: ${orgName}` }],
+        isError: true,
+      });
+    }
+    return tool.handler(params as Record<string, unknown>, config) as Promise<CallToolResult>;
+  });
 }
 
 // Register prompts
@@ -78,4 +88,5 @@ server.prompt(
 // Connect via stdio
 const transport = new StdioServerTransport();
 await server.connect(transport);
-console.error(`mcp-server-datadog connected (site: ${env.site})`);
+const orgList = multiOrg.orgs.join(", ");
+console.error(`mcp-server-datadog connected (orgs: ${orgList}, default: ${multiOrg.defaultOrg})`);
