@@ -60,7 +60,7 @@ async function handler(
         },
         compute: [
           {
-            aggregation,
+            aggregation: aggregation as any,
             metric,
             type: "total" as any,
           },
@@ -71,11 +71,11 @@ async function handler(
                 facet: groupBy,
                 limit: groupLimit,
                 sort: {
-                  aggregation,
+                  aggregation: aggregation as any,
                   order: "desc" as any,
                 },
               },
-            ]
+            ] as any
           : undefined,
       },
     });
@@ -120,7 +120,7 @@ async function handler(
     }
 
     // No groupBy — single result
-    const value = buckets[0]?.computes?.["c0"]?.value ?? 0;
+    const value = (buckets[0]?.computes?.["c0"] as any)?.value ?? 0;
     const text = `Aggregation result: ${aggregation}(${metricLabel}) = ${value}`;
 
     return {

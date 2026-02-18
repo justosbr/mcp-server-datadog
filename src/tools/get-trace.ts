@@ -66,8 +66,9 @@ async function handler(
     });
 
     // Calculate total trace duration
-    const firstStart = new Date(sortedSpans[0]?.attributes?.start || 0).getTime();
-    const lastSpan = sortedSpans[sortedSpans.length - 1]?.attributes;
+    const firstAttrs = sortedSpans[0]?.attributes as any;
+    const firstStart = new Date(firstAttrs?.start || 0).getTime();
+    const lastSpan = sortedSpans[sortedSpans.length - 1]?.attributes as any;
     const lastStart = new Date(lastSpan?.start || 0).getTime();
     const lastDurationMs = lastSpan?.duration != null ? lastSpan.duration / 1_000_000 : 0;
     const totalDurationMs = Math.round(lastStart - firstStart + lastDurationMs);
