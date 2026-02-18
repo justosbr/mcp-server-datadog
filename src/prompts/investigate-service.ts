@@ -25,6 +25,8 @@ export const investigateServicePrompt = {
             `3. **Error Rate**: Call aggregate_logs with query "service:${service}", groupBy "status", to see error vs info/warn distribution.`,
             `4. **Key Metrics**: Call query_metrics with query "avg:trace.http.request.duration{service:${service}}" from "1h" for latency.`,
             "",
+            "Note: All tools accept an optional `org` parameter to specify which Datadog organization to query (e.g., org: \"br-staging\"). If omitted, the default org is used.",
+            "",
             "Summarize findings: which monitors are alerting, what errors are occurring, and whether latency is elevated.",
           ].join("\n"),
         },
