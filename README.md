@@ -37,9 +37,9 @@ Add the server to your MCP client configuration (Claude Desktop, Claude Code, et
 }
 ```
 
-### With 1Password CLI
+### With 1Password CLI (single org)
 
-Use the `op` CLI to inject credentials from 1Password instead of storing keys in plaintext. Create a 1Password item (e.g. `mcp-datadog` in your `Employee` vault) with `api_key` and `app_key` fields, then configure:
+Use the `op` CLI to inject credentials from 1Password instead of storing keys in plaintext:
 
 ```json
 {
@@ -57,15 +57,60 @@ Use the `op` CLI to inject credentials from 1Password instead of storing keys in
 }
 ```
 
+### With 1Password CLI (multi-org)
+
+For multiple Datadog organizations, create a 1Password item per org (e.g. `mcp-datadog-br-prod`, `mcp-datadog-br-staging`), each with `api_key` and `app_key` fields:
+
+```json
+{
+  "mcpServers": {
+    "datadog": {
+      "command": "/opt/homebrew/bin/op",
+      "args": ["run", "--", "node", "/path/to/mcp-server-datadog/dist/index.js"],
+      "env": {
+        "DD_ORGS": "br-prod,br-staging",
+        "DD_DEFAULT_ORG": "br-prod",
+        "DD_BR_PROD_API_KEY": "op://Employee/mcp-datadog-br-prod/api_key",
+        "DD_BR_PROD_APP_KEY": "op://Employee/mcp-datadog-br-prod/app_key",
+        "DD_BR_STAGING_API_KEY": "op://Employee/mcp-datadog-br-staging/api_key",
+        "DD_BR_STAGING_APP_KEY": "op://Employee/mcp-datadog-br-staging/app_key",
+        "DD_SITE": "datadoghq.com"
+      }
+    }
+  }
+}
+```
+
 The `op run --` wrapper resolves `op://` references at runtime, so no secrets are stored on disk.
 
 ## Environment Variables
+
+### Single-org mode
 
 | Variable | Required | Description |
 |---|---|---|
 | `DD_API_KEY` | Yes | Datadog API key (or `op://` reference) |
 | `DD_APP_KEY` | Yes | Datadog Application key, user-scoped (or `op://` reference) |
 | `DD_SITE` | No | Datadog site (default: `datadoghq.com`) |
+
+### Multi-org mode
+
+| Variable | Required | Description |
+|---|---|---|
+| `DD_ORGS` | Yes | Comma-separated org names (e.g. `br-prod,br-staging`) |
+| `DD_DEFAULT_ORG` | No | Default org when `org` param is omitted (defaults to first in `DD_ORGS`) |
+| `DD_<ORG>_API_KEY` | Yes | API key per org. Org name uppercased, hyphens become underscores. |
+| `DD_<ORG>_APP_KEY` | Yes | Application key per org. |
+| `DD_SITE` | No | Datadog site, shared across all orgs (default: `datadoghq.com`) |
+
+## Multi-Org Support
+
+All tools accept an optional `org` parameter to specify which Datadog organization to query. If omitted, the default org (`DD_DEFAULT_ORG`) is used.
+
+```
+search_logs({ query: "service:api error", org: "br-staging" })
+search_logs({ query: "service:api error" })  // uses default org
+```
 
 ## Available Tools
 
