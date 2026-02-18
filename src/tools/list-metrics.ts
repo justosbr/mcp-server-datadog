@@ -12,7 +12,7 @@ const schema = {
     .boolean()
     .optional()
     .describe("Filter to only configured metrics"),
-  pageSize: z.number().default(50).describe("Number of metrics per page"),
+  pageSize: z.coerce.number().default(50).describe("Number of metrics per page"),
   format: FORMAT_SCHEMA,
 };
 

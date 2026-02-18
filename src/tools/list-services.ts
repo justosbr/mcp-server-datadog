@@ -4,8 +4,8 @@ import { ToolDefinition, FORMAT_SCHEMA } from "./types.js";
 import { formatError, errorContent } from "../utils/errors.js";
 
 const schema = {
-  pageSize: z.number().default(50).describe("Number of services per page"),
-  pageNumber: z.number().default(0).describe("Page number (0-indexed)"),
+  pageSize: z.coerce.number().default(50).describe("Number of services per page"),
+  pageNumber: z.coerce.number().default(0).describe("Page number (0-indexed)"),
   format: FORMAT_SCHEMA,
 };
 

@@ -4,7 +4,7 @@ import { ToolDefinition, FORMAT_SCHEMA } from "./types.js";
 import { formatError, errorContent } from "../utils/errors.js";
 
 const schema = {
-  monitorId: z.number().describe("The monitor ID to retrieve"),
+  monitorId: z.coerce.number().describe("The monitor ID to retrieve"),
   format: FORMAT_SCHEMA,
 };
 

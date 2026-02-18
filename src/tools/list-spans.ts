@@ -19,7 +19,7 @@ const schema = {
     .string()
     .optional()
     .describe("End time — ISO 8601 or relative. Default: now"),
-  limit: z.number().default(50).describe("Max spans to return. Default: 50"),
+  limit: z.coerce.number().default(50).describe("Max spans to return. Default: 50"),
   cursor: z
     .string()
     .optional()

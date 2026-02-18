@@ -30,7 +30,7 @@ const schema = {
     .describe(
       "Field to group by, e.g. 'service', 'status', '@http.status_code'"
     ),
-  groupLimit: z.number().default(10).describe("Max groups to return"),
+  groupLimit: z.coerce.number().default(10).describe("Max groups to return"),
   format: FORMAT_SCHEMA,
 };
 
