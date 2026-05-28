@@ -2,6 +2,8 @@
 
 An MCP (Model Context Protocol) server for Datadog that provides read-only access to Logs, APM traces, Metrics, Monitors, and the Service Catalog. Connect your AI assistant to Datadog and let it investigate service health, query metrics, search logs, and trace requests across your infrastructure.
 
+> This repository is public primarily so [Justos](https://justos.com.br) team members can install it via internal tooling. External use is welcome under the ISC license but not actively supported — issues and PRs may sit untriaged.
+
 ## Prerequisites
 
 - **Node.js 18+**
