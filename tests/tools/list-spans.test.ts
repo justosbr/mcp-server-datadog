@@ -32,30 +32,30 @@ import { listSpans } from "../../src/tools/list-spans.js";
 
 const fakeConfig = new client.Configuration();
 
+// Mirrors the deserialized v2 Spans API shape: operation_name/status live under
+// additionalProperties, the raw duration (ns) under custom, start under startTimestamp.
 const sampleSpans = {
   data: [
     {
       attributes: {
         service: "payments",
-        operationName: "http.request",
         resourceName: "POST /api/charge",
-        status: "error",
-        duration: 125_000_000, // 125ms in nanoseconds
-        start: "2026-02-18T00:05:00.000Z",
+        startTimestamp: "2026-02-18T00:05:00.000Z",
         traceId: "abc123def456",
         spanId: "span001",
+        additionalProperties: { operation_name: "http.request", status: "error" },
+        custom: { duration: 125_000_000 }, // 125ms in nanoseconds
       },
     },
     {
       attributes: {
         service: "auth",
-        operationName: "grpc.server",
         resourceName: "AuthService.Validate",
-        status: "ok",
-        duration: 3_500_000, // 3.5ms → rounds to 4ms
-        start: "2026-02-18T00:10:00.000Z",
+        startTimestamp: "2026-02-18T00:10:00.000Z",
         traceId: "abc123def456",
         spanId: "span002",
+        additionalProperties: { operation_name: "grpc.server", status: "ok" },
+        custom: { duration: 3_500_000 }, // 3.5ms → rounds to 4ms
       },
     },
   ],

@@ -3,6 +3,7 @@ import { client, v2 } from "@datadog/datadog-api-client";
 import { ToolDefinition, FORMAT_SCHEMA } from "./types.js";
 import { formatError, errorContent } from "../utils/errors.js";
 import { parseTimeRange } from "../utils/time.js";
+import { spanFields, formatDurationMs } from "../utils/spans.js";
 
 const schema = {
   query: z
@@ -83,15 +84,8 @@ async function handler(
 
     // Summary format
     const spanLines = response.data.map((span: any) => {
-      const attrs = span.attributes || {};
-      const start = attrs.start || "unknown";
-      const service = attrs.service || "unknown";
-      const operationName = attrs.operationName || "unknown";
-      const resourceName = attrs.resourceName || "";
-      const duration = attrs.duration != null ? Math.round(attrs.duration / 1_000_000) : 0;
-      const status = attrs.status || "unknown";
-      const traceId = attrs.traceId || "unknown";
-      return `- [${start}] ${service}/${operationName} ${resourceName} (${duration} ms) [${status}] trace_id=${traceId}`;
+      const f = spanFields(span);
+      return `- [${f.start}] ${f.service}/${f.operationName} ${f.resourceName} (${formatDurationMs(f.durationMs)}) [${f.status}] trace_id=${f.traceId}`;
     });
 
     let text =

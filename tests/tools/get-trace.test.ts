@@ -32,42 +32,41 @@ import { getTrace } from "../../src/tools/get-trace.js";
 
 const fakeConfig = new client.Configuration();
 
+// Mirrors the deserialized v2 Spans API shape: operation_name/status under
+// additionalProperties, raw duration (ns) under custom, start under startTimestamp.
 const sampleTraceSpans = {
   data: [
     {
       attributes: {
         service: "api-gateway",
-        operationName: "http.request",
         resourceName: "GET /api/users",
-        status: "ok",
-        duration: 250_000_000, // 250ms
-        start: "2026-02-18T00:05:00.000Z",
+        startTimestamp: "2026-02-18T00:05:00.000Z",
         traceId: "trace-abc-123",
         spanId: "span-001",
+        additionalProperties: { operation_name: "http.request", status: "ok" },
+        custom: { duration: 250_000_000 }, // 250ms
       },
     },
     {
       attributes: {
         service: "users-service",
-        operationName: "grpc.server",
         resourceName: "UsersService.List",
-        status: "ok",
-        duration: 120_000_000, // 120ms
-        start: "2026-02-18T00:05:00.050Z",
+        startTimestamp: "2026-02-18T00:05:00.050Z",
         traceId: "trace-abc-123",
         spanId: "span-002",
+        additionalProperties: { operation_name: "grpc.server", status: "ok" },
+        custom: { duration: 120_000_000 }, // 120ms
       },
     },
     {
       attributes: {
         service: "postgres",
-        operationName: "db.query",
         resourceName: "SELECT * FROM users",
-        status: "ok",
-        duration: 45_000_000, // 45ms
-        start: "2026-02-18T00:05:00.100Z",
+        startTimestamp: "2026-02-18T00:05:00.100Z",
         traceId: "trace-abc-123",
         spanId: "span-003",
+        additionalProperties: { operation_name: "db.query", status: "ok" },
+        custom: { duration: 45_000_000 }, // 45ms
       },
     },
   ],

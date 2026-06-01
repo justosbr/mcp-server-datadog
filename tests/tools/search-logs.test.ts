@@ -100,6 +100,35 @@ describe("search_logs", () => {
     expect(parsed.data[1].attributes.service).toBe("auth");
   });
 
+  it("caps oversized JSON output and notes truncation", async () => {
+    const bigMessage = "x".repeat(3000);
+    const manyLogs = {
+      data: Array.from({ length: 20 }, (_, i) => ({
+        attributes: {
+          timestamp: "2026-02-18T00:05:00.000Z",
+          service: "verbose-service",
+          status: "info",
+          message: bigMessage,
+          attributes: { index: i, payload: bigMessage },
+        },
+      })),
+      meta: { page: { after: "next-cursor-token" } },
+    };
+    mockListLogs.mockResolvedValue(manyLogs);
+
+    const result = await searchLogs.handler(
+      { query: "*", format: "json" },
+      fakeConfig
+    );
+
+    expect(result.isError).toBeUndefined();
+    const text = result.content[0].text;
+    expect(text).toContain("Output truncated");
+    expect(text).toContain("of 20 logs");
+    expect(text).toContain("meta.page.after");
+    expect(text.length).toBeLessThan(30_000);
+  });
+
   it("returns friendly message when no logs found", async () => {
     mockListLogs.mockResolvedValue({ data: [], meta: {} });
 

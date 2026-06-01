@@ -38,16 +38,17 @@ describe("aggregate_logs", () => {
   });
 
   it("returns grouped aggregation in summary format", async () => {
+    // Real API returns the compute value as a scalar keyed by "c0", not { value }.
     mockAggregateLogs.mockResolvedValue({
       data: {
         buckets: [
           {
             by: { service: "payments" },
-            computes: { "c0": { value: 1234 } },
+            computes: { "c0": 1234 },
           },
           {
             by: { service: "auth" },
-            computes: { "c0": { value: 567 } },
+            computes: { "c0": 567 },
           },
         ],
       },
@@ -72,6 +73,35 @@ describe("aggregate_logs", () => {
     expect(text).toContain("1234");
     expect(text).toContain("auth");
     expect(text).toContain("567");
+  });
+
+  it("returns ungrouped scalar result instead of silently zero", async () => {
+    mockAggregateLogs.mockResolvedValue({
+      data: { buckets: [{ by: {}, computes: { "c0": 1151436 } }] },
+    });
+
+    const result = await aggregateLogs.handler(
+      { query: "*", aggregation: "count", format: "summary" },
+      fakeConfig
+    );
+
+    expect(result.isError).toBeUndefined();
+    expect(result.content[0].text).toContain("1151436");
+  });
+
+  it("omits the invalid sort field from group_by requests", async () => {
+    mockAggregateLogs.mockResolvedValue({
+      data: { buckets: [{ by: { service: "payments" }, computes: { "c0": 1 } }] },
+    });
+
+    await aggregateLogs.handler(
+      { query: "*", aggregation: "count", groupBy: "service", format: "summary" },
+      fakeConfig
+    );
+
+    const sentBody = mockAggregateLogs.mock.calls[0][0].body;
+    expect(sentBody.groupBy[0]).toEqual({ facet: "service", limit: 10 });
+    expect(sentBody.groupBy[0].sort).toBeUndefined();
   });
 
   it("returns friendly message when no data", async () => {
