@@ -74,10 +74,27 @@ async function handler(
     }
 
     if (format === "json") {
+      // Logs can carry large nested payloads; cap total output so a single
+      // call can't flood the context. Always emit at least one log.
+      const JSON_BUDGET = 25_000;
+      const allLogs = response.data;
+      const kept: any[] = [];
+      let size = 0;
+      for (const log of allLogs) {
+        const entrySize = JSON.stringify(log).length;
+        if (kept.length > 0 && size + entrySize > JSON_BUDGET) break;
+        kept.push(log);
+        size += entrySize;
+      }
+
+      const out = { data: kept, meta: response.meta };
+      let text = JSON.stringify(out, null, 2);
+      if (kept.length < allLogs.length) {
+        text += `\n\n[Output truncated: showing ${kept.length} of ${allLogs.length} logs (~${JSON_BUDGET / 1000}KB cap). Narrow the query, lower limit, or page with the cursor in meta.page.after.]`;
+      }
+
       return {
-        content: [
-          { type: "text" as const, text: JSON.stringify(response, null, 2) },
-        ],
+        content: [{ type: "text" as const, text }],
       };
     }
 

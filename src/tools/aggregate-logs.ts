@@ -34,6 +34,16 @@ const schema = {
   format: FORMAT_SCHEMA,
 };
 
+// For `type: "total"` computes, the bucket value is a scalar keyed by "c0".
+// (Timeseries computes would nest a `.value`; total does not.)
+function bucketValue(bucket: any): number | string {
+  const raw = bucket?.computes?.["c0"];
+  if (raw != null && typeof raw === "object") {
+    return raw.value ?? 0;
+  }
+  return raw ?? 0;
+}
+
 async function handler(
   params: Record<string, unknown>,
   config: client.Configuration
@@ -66,16 +76,12 @@ async function handler(
           },
         ],
         groupBy: groupBy
-          ? [
+          ? ([
               {
                 facet: groupBy,
                 limit: groupLimit,
-                sort: {
-                  aggregation: aggregation as any,
-                  order: "desc" as any,
-                },
               },
-            ] as any
+            ] as any)
           : undefined,
       },
     });
@@ -106,7 +112,7 @@ async function handler(
     if (groupBy) {
       const lines = buckets.map((bucket: any) => {
         const groupValue = bucket.by?.[groupBy] ?? "unknown";
-        const value = bucket.computes?.["c0"]?.value ?? 0;
+        const value = bucketValue(bucket);
         return `- ${groupValue}: ${value}`;
       });
 
@@ -120,7 +126,7 @@ async function handler(
     }
 
     // No groupBy — single result
-    const value = (buckets[0]?.computes?.["c0"] as any)?.value ?? 0;
+    const value = bucketValue(buckets[0]);
     const text = `Aggregation result: ${aggregation}(${metricLabel}) = ${value}`;
 
     return {
