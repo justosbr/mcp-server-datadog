@@ -64,10 +64,28 @@ async function handler(
     }
 
     if (format === "json") {
+      // A single trace can carry hundreds of spans with large nested payloads;
+      // cap total output so one call can't flood the context. Always emit at
+      // least one span.
+      const JSON_BUDGET = 25_000;
+      const allSpans = response.data;
+      const kept: any[] = [];
+      let size = 0;
+      for (const span of allSpans) {
+        const entrySize = JSON.stringify(span).length;
+        if (kept.length > 0 && size + entrySize > JSON_BUDGET) break;
+        kept.push(span);
+        size += entrySize;
+      }
+
+      const out = { data: kept, meta: response.meta };
+      let text = JSON.stringify(out, null, 2);
+      if (kept.length < allSpans.length) {
+        text += `\n\n[Output truncated: showing ${kept.length} of ${allSpans.length} spans (~${JSON_BUDGET / 1000}KB cap). Narrow the time window with from/to, or use format:summary for a compact view.]`;
+      }
+
       return {
-        content: [
-          { type: "text" as const, text: JSON.stringify(response, null, 2) },
-        ],
+        content: [{ type: "text" as const, text }],
       };
     }
 
