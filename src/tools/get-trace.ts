@@ -105,7 +105,7 @@ async function handler(
 export const getTrace: ToolDefinition = {
   name: "get_trace",
   description:
-    "Get all spans for a specific trace by trace ID. Shows the full request flow across services with timing for each span.",
+    "Get all spans for a specific trace by trace ID, showing the full request flow across services with per-span timing. Searches a bounded time window (default: last 7d) — widen from/to if the trace is older or no spans are found.",
   schema,
   handler,
 };
