@@ -4,7 +4,9 @@
  * The deserialized `SpansAttributes` model exposes some fields at the top level
  * (service, resourceName, traceId, startTimestamp) but keeps others nested:
  * operation_name and status live under `additionalProperties`, and the raw span
- * `duration` (nanoseconds) lives under `custom`.
+ * `duration` (nanoseconds) lives under `custom`. `startTimestamp` deserializes to
+ * a `Date`, so it is normalized here to an ISO string that callers can sort and
+ * render as text.
  */
 
 export interface SpanFields {
@@ -22,9 +24,14 @@ export function spanFields(span: any): SpanFields {
   const extra = attrs.additionalProperties ?? {};
   const custom = attrs.custom ?? {};
   const durationNs = custom.duration;
+  const startTimestamp = attrs.startTimestamp;
+  const start =
+    startTimestamp instanceof Date
+      ? startTimestamp.toISOString()
+      : startTimestamp || "unknown";
 
   return {
-    start: attrs.startTimestamp || "unknown",
+    start,
     service: attrs.service || "unknown",
     operationName: extra.operation_name || "unknown",
     resourceName: attrs.resourceName || "",

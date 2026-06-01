@@ -100,6 +100,84 @@ describe("get_trace", () => {
     expect(text).toContain("45 ms");
   });
 
+  it("sorts and renders spans when startTimestamp is a Date (real client shape)", async () => {
+    // The deserialized v2 Spans API returns startTimestamp as a Date object.
+    // Spans are supplied out of chronological order to exercise the sort.
+    const dateShapedSpans = {
+      data: [
+        {
+          attributes: {
+            service: "postgres",
+            resourceName: "SELECT * FROM users",
+            startTimestamp: new Date("2026-02-18T00:05:00.100Z"),
+            traceId: "trace-abc-123",
+            spanId: "span-003",
+            additionalProperties: { operation_name: "db.query", status: "ok" },
+            custom: { duration: 160_000 }, // 0.16ms
+          },
+        },
+        {
+          attributes: {
+            service: "api-gateway",
+            resourceName: "GET /api/users",
+            startTimestamp: new Date("2026-02-18T00:05:00.000Z"),
+            traceId: "trace-abc-123",
+            spanId: "span-001",
+            additionalProperties: { operation_name: "http.request", status: "ok" },
+            custom: { duration: 250_000_000 }, // 250ms
+          },
+        },
+      ],
+      meta: { page: {} },
+    };
+    mockListSpans.mockResolvedValue(dateShapedSpans);
+
+    const result = await getTrace.handler(
+      { traceId: "trace-abc-123", format: "summary" },
+      fakeConfig
+    );
+
+    expect(result.isError).toBeUndefined();
+    const text = result.content[0].text;
+    expect(text).toContain("2 spans");
+    expect(text).toContain("api-gateway/http.request");
+    expect(text).toContain("postgres/db.query");
+    expect(text).toContain("0.16 ms");
+    // Sorted chronologically: api-gateway (earliest) before postgres.
+    expect(text.indexOf("api-gateway")).toBeLessThan(text.indexOf("postgres"));
+  });
+
+  it("caps json output and notes truncation when spans are large", async () => {
+    const blob = "x".repeat(2000);
+    const manySpans = {
+      data: Array.from({ length: 50 }, (_, i) => ({
+        attributes: {
+          service: `svc-${i}`,
+          resourceName: "resource",
+          startTimestamp: new Date(2026, 1, 18, 0, 5, 0, i),
+          traceId: "trace-big",
+          spanId: `span-${i}`,
+          additionalProperties: { operation_name: "op", status: "ok" },
+          custom: { duration: 1_000_000, blob },
+        },
+      })),
+      meta: { page: {} },
+    };
+    mockListSpans.mockResolvedValue(manySpans);
+
+    const result = await getTrace.handler(
+      { traceId: "trace-big", format: "json" },
+      fakeConfig
+    );
+
+    expect(result.isError).toBeUndefined();
+    const text = result.content[0].text;
+    expect(text).toContain("[Output truncated: showing");
+    expect(text).toContain("of 50 spans");
+    expect(text).toContain("svc-0");
+    expect(text).not.toContain("svc-49");
+  });
+
   it("returns friendly message when trace not found", async () => {
     mockListSpans.mockResolvedValue({ data: [], meta: {} });
 
