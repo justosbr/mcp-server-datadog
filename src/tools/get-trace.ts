@@ -1,22 +1,14 @@
 import { z } from "zod";
 import { client, v2 } from "@datadog/datadog-api-client";
-import { ToolDefinition, FORMAT_SCHEMA } from "./types.js";
+import { ToolDefinition, FORMAT_SCHEMA, fromTimeSchema, toTimeSchema } from "./types.js";
 import { formatError, errorContent } from "../utils/errors.js";
 import { parseTimeRange } from "../utils/time.js";
 import { spanFields, formatDurationMs } from "../utils/spans.js";
 
 const schema = {
   traceId: z.string().describe("The trace ID to retrieve all spans for"),
-  from: z
-    .string()
-    .optional()
-    .describe(
-      "Start of the search window — ISO 8601 or relative. Must cover when the trace occurred. Default: 7d"
-    ),
-  to: z
-    .string()
-    .optional()
-    .describe("End of the search window — ISO 8601 or relative. Default: now"),
+  from: fromTimeSchema("7d", "Must cover when the trace occurred."),
+  to: toTimeSchema(),
   format: FORMAT_SCHEMA,
 };
 

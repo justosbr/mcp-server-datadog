@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { client, v2 } from "@datadog/datadog-api-client";
-import { ToolDefinition, FORMAT_SCHEMA } from "./types.js";
+import { ToolDefinition, FORMAT_SCHEMA, fromTimeSchema, toTimeSchema } from "./types.js";
 import { formatError, errorContent } from "../utils/errors.js";
 import { parseTimeRange } from "../utils/time.js";
 
@@ -11,16 +11,8 @@ const schema = {
     .describe(
       "Datadog log query, e.g. 'service:payments AND status:error'. Default: '*'"
     ),
-  from: z
-    .string()
-    .optional()
-    .describe(
-      "Start time — ISO 8601 or relative (e.g., '15m', '1h'). Default: 15m"
-    ),
-  to: z
-    .string()
-    .optional()
-    .describe("End time — ISO 8601 or relative. Default: now"),
+  from: fromTimeSchema("15m"),
+  to: toTimeSchema(),
   limit: z
     .number()
     .default(50)

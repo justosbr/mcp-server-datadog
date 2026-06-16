@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { client, v2 } from "@datadog/datadog-api-client";
-import { ToolDefinition, FORMAT_SCHEMA } from "./types.js";
+import { ToolDefinition, FORMAT_SCHEMA, fromTimeSchema, toTimeSchema } from "./types.js";
 import { formatError, errorContent } from "../utils/errors.js";
 import { parseTimeRange } from "../utils/time.js";
 
@@ -14,14 +14,8 @@ const schema = {
     .string()
     .default("*")
     .describe("Optional query to scope the discovery"),
-  from: z
-    .string()
-    .optional()
-    .describe("Start time. Default: 15m"),
-  to: z
-    .string()
-    .optional()
-    .describe("End time. Default: now"),
+  from: fromTimeSchema("15m"),
+  to: toTimeSchema(),
   format: FORMAT_SCHEMA,
 };
 

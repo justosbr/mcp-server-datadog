@@ -1,19 +1,13 @@
 import { z } from "zod";
 import { client, v2 } from "@datadog/datadog-api-client";
-import { ToolDefinition, FORMAT_SCHEMA } from "./types.js";
+import { ToolDefinition, FORMAT_SCHEMA, fromTimeSchema, toTimeSchema } from "./types.js";
 import { formatError, errorContent } from "../utils/errors.js";
 import { parseTimeRange } from "../utils/time.js";
 
 const schema = {
   query: z.string().default("*").describe("Datadog log query"),
-  from: z
-    .string()
-    .optional()
-    .describe("Start time — ISO 8601 or relative. Default: 15m"),
-  to: z
-    .string()
-    .optional()
-    .describe("End time — ISO 8601 or relative. Default: now"),
+  from: fromTimeSchema("15m"),
+  to: toTimeSchema(),
   aggregation: z
     .enum(["count", "avg", "sum", "min", "max"])
     .default("count")

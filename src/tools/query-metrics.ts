@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { client, v1 } from "@datadog/datadog-api-client";
-import { ToolDefinition, FORMAT_SCHEMA } from "./types.js";
+import { ToolDefinition, FORMAT_SCHEMA, fromTimeSchema, toTimeSchema } from "./types.js";
 import { formatError, errorContent } from "../utils/errors.js";
 import { parseTimeRange } from "../utils/time.js";
 
@@ -9,14 +9,8 @@ const schema = {
     "Datadog metric query, e.g. 'avg:system.cpu.user{env:prod} by {host}'. " +
     "Use the dd_query_syntax prompt for syntax help."
   ),
-  from: z
-    .string()
-    .optional()
-    .describe("Start time — ISO 8601 or relative (e.g., '1h', '7d'). Default: 15m"),
-  to: z
-    .string()
-    .optional()
-    .describe("End time — ISO 8601 or relative. Default: now"),
+  from: fromTimeSchema("15m"),
+  to: toTimeSchema(),
   format: FORMAT_SCHEMA,
 };
 

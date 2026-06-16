@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { client } from "@datadog/datadog-api-client";
-import { ToolDefinition, FORMAT_SCHEMA } from "./types.js";
+import { ToolDefinition, FORMAT_SCHEMA, fromTimeSchema, toTimeSchema } from "./types.js";
 import type { DatadogEnv } from "../config.js";
 import { formatError, errorContent } from "../utils/errors.js";
 import { parseTimeRange } from "../utils/time.js";
@@ -17,20 +17,8 @@ const schema = {
       "The LLM Observability trace ID to retrieve all spans for. Trace IDs come " +
         "from search_llmobs_spans results."
     ),
-  from: z
-    .string()
-    .optional()
-    .describe(
-      "Start of the search window — ISO 8601 (e.g. '2026-06-16T10:00:00Z') or " +
-        "relative ('15m', '2h', '7d'). Must cover when the trace occurred. Default: 7d"
-    ),
-  to: z
-    .string()
-    .optional()
-    .describe(
-      "End of the search window — ISO 8601 (e.g. '2026-06-16T10:00:00Z') or " +
-        "relative ('15m', '2h', '7d'). Default: now"
-    ),
+  from: fromTimeSchema("7d", "Must cover when the trace occurred."),
+  to: toTimeSchema(),
   format: FORMAT_SCHEMA,
 };
 
