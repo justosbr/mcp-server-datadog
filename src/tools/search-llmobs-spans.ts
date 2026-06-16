@@ -31,6 +31,8 @@ const schema = {
   to: z.string().optional().describe("End time — ISO 8601 or relative. Default: now"),
   limit: z.coerce
     .number()
+    .int()
+    .positive()
     .default(50)
     .describe(`Max spans to return (capped at ${MAX_LIMIT}). Default: 50`),
   cursor: z

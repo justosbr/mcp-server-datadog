@@ -65,6 +65,14 @@ async function handler(
       };
     }
 
+    // The API caps a single page at TRACE_LIMIT spans; a present cursor means
+    // the trace has more spans than were fetched. Surface that rather than
+    // silently returning a partial trace.
+    const moreSpans = Boolean(response?.meta?.page?.after);
+    const truncationNote = moreSpans
+      ? `\n\n[Note: this trace has more than ${TRACE_LIMIT} spans; only the first ${data.length} are shown. Narrow from/to to inspect the rest.]`
+      : "";
+
     if (format === "json") {
       const kept: any[] = [];
       let size = 0;
@@ -79,6 +87,7 @@ async function handler(
       if (kept.length < data.length) {
         text += `\n\n[Output truncated: showing ${kept.length} of ${data.length} spans (~${JSON_BUDGET / 1000}KB cap). Narrow the time window or use format:summary.]`;
       }
+      text += truncationNote;
       return { content: [{ type: "text" as const, text }] };
     }
 
@@ -86,7 +95,8 @@ async function handler(
       (a, b) => (llmobsSpanFields(a).startNs ?? 0) - (llmobsSpanFields(b).startNs ?? 0)
     );
     const lines = sorted.map(formatLlmobsSpanLine);
-    const text = `LLM trace ${traceId}: ${data.length} spans\n\n` + lines.join("\n");
+    const text =
+      `LLM trace ${traceId}: ${data.length} spans\n\n` + lines.join("\n") + truncationNote;
 
     return { content: [{ type: "text" as const, text }] };
   } catch (error) {

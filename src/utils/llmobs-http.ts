@@ -14,25 +14,32 @@ interface LlmobsHttpError extends Error {
 }
 
 /**
- * DD_SITE must be a bare site suffix (e.g. "datadoghq.com", "us3.datadoghq.com").
- * The base host is built as `https://api.{site}`, matching the SDK's own
- * `{subdomain}.{site}` server template; a full hostname would produce a wrong URL.
+ * DD_SITE must be a bare site suffix (e.g. "datadoghq.com", "us3.datadoghq.com",
+ * "datadoghq.eu", "ddog-gov.com"). The base host is built as `https://api.{site}`,
+ * matching the SDK's own `{subdomain}.{site}` server template. Reject schemes,
+ * paths, ports, whitespace, and api/app/www subdomains — anything that would
+ * produce a wrong host when prefixed with "api.". Returns the normalized site.
  */
-function assertValidSite(site: string): void {
-  if (/^https?:\/\//i.test(site) || site.startsWith("api.")) {
+function normalizeSite(site: string): string {
+  const trimmed = site.trim();
+  const looksLikeBareSite =
+    /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(trimmed) &&
+    !/^(api|app|www)\./i.test(trimmed);
+  if (!looksLikeBareSite) {
     throw new Error(
       `Invalid DD_SITE "${site}". Expected a bare site suffix like ` +
         `"datadoghq.com" or "us3.datadoghq.com", not a full hostname.`
     );
   }
+  return trimmed;
 }
 
 export async function llmobsSearchSpans(
   env: DatadogEnv,
   attributes: LlmobsSearchAttributes
 ): Promise<any> {
-  assertValidSite(env.site);
-  const url = `https://api.${env.site}${LLMOBS_SEARCH_PATH}`;
+  const site = normalizeSite(env.site);
+  const url = `https://api.${site}${LLMOBS_SEARCH_PATH}`;
   const body = JSON.stringify({ data: { type: "spans", attributes } });
 
   const response = await fetch(url, {
@@ -46,8 +53,9 @@ export async function llmobsSearchSpans(
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
+  const text = await response.text().catch(() => "");
+
   if (!response.ok) {
-    const text = await response.text().catch(() => "");
     const error = new Error(
       `LLM Observability API returned ${response.status}: ${text}`
     ) as LlmobsHttpError;
@@ -55,5 +63,17 @@ export async function llmobsSearchSpans(
     throw error;
   }
 
-  return response.json();
+  // A 2xx with an empty body (e.g. 204) is treated as no results.
+  if (text.trim() === "") {
+    return { data: [], meta: {} };
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(
+      `LLM Observability API returned ${response.status} with a non-JSON body: ` +
+        text.slice(0, 200)
+    );
+  }
 }

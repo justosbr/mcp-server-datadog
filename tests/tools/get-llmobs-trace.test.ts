@@ -56,6 +56,15 @@ describe("get_llmobs_trace", () => {
     expect(text.indexOf("first")).toBeLessThan(text.indexOf("second"));
   });
 
+  it("warns when the trace has more spans than one page returned", async () => {
+    mockSearch.mockResolvedValue({
+      data: [span("a", 100, "first")],
+      meta: { page: { after: "MORE" } },
+    });
+    const res = await getLlmobsTrace.handler({ traceId: "t1" }, fakeConfig, env);
+    expect(res.content[0].text).toContain("only the first 1 are shown");
+  });
+
   it("reports a friendly message when the trace has no spans", async () => {
     mockSearch.mockResolvedValue({ data: [], meta: {} });
     const res = await getLlmobsTrace.handler({ traceId: "missing" }, fakeConfig, env);
