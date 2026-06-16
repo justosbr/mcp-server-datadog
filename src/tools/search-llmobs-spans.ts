@@ -21,14 +21,27 @@ const schema = {
       "LLM Observability query, e.g. '@session_id:abc123'. When set, the " +
         "structured filters (ml_app, span_kind, tags) are ignored by the API."
     ),
-  ml_app: z.string().optional().describe("Filter by ML app (LLMObs application) name."),
+  ml_app: z
+    .string()
+    .optional()
+    .describe("Filter by ML app name — the instrumented LLM application (e.g. 'my-chatbot')."),
   span_kind: z.enum(SPAN_KINDS).optional().describe("Filter by span kind."),
   tags: z
     .record(z.string())
     .optional()
     .describe('Tag filters as key/value pairs, e.g. {"env":"prod"}.'),
-  from: z.string().optional().describe("Start time — ISO 8601 or relative. Default: 15m"),
-  to: z.string().optional().describe("End time — ISO 8601 or relative. Default: now"),
+  from: z
+    .string()
+    .optional()
+    .describe(
+      "Start time — ISO 8601 (e.g. '2026-06-16T10:00:00Z') or relative ('15m', '2h', '7d'). Default: 15m"
+    ),
+  to: z
+    .string()
+    .optional()
+    .describe(
+      "End time — ISO 8601 (e.g. '2026-06-16T10:00:00Z') or relative ('15m', '2h', '7d'). Default: now"
+    ),
   limit: z.coerce
     .number()
     .int()

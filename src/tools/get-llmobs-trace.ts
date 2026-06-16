@@ -11,18 +11,26 @@ const TRACE_LIMIT = 1000;
 const JSON_BUDGET = 25_000;
 
 const schema = {
-  traceId: z.string().describe("The LLM Observability trace ID to retrieve all spans for."),
+  traceId: z
+    .string()
+    .describe(
+      "The LLM Observability trace ID to retrieve all spans for. Trace IDs come " +
+        "from search_llmobs_spans results."
+    ),
   from: z
     .string()
     .optional()
     .describe(
-      "Start of the search window — ISO 8601 or relative. Must cover when the " +
-        "trace occurred. Default: 7d"
+      "Start of the search window — ISO 8601 (e.g. '2026-06-16T10:00:00Z') or " +
+        "relative ('15m', '2h', '7d'). Must cover when the trace occurred. Default: 7d"
     ),
   to: z
     .string()
     .optional()
-    .describe("End of the search window — ISO 8601 or relative. Default: now"),
+    .describe(
+      "End of the search window — ISO 8601 (e.g. '2026-06-16T10:00:00Z') or " +
+        "relative ('15m', '2h', '7d'). Default: now"
+    ),
   format: FORMAT_SCHEMA,
 };
 
