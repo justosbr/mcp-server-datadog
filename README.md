@@ -1,6 +1,6 @@
 # mcp-server-datadog
 
-An MCP (Model Context Protocol) server for Datadog that provides read-only access to Logs, APM traces, Metrics, Monitors, and the Service Catalog. Connect your AI assistant to Datadog and let it investigate service health, query metrics, search logs, and trace requests across your infrastructure.
+An MCP (Model Context Protocol) server for Datadog that provides read-only access to Logs, APM traces, Metrics, Monitors, the Service Catalog, and LLM Observability. Connect your AI assistant to Datadog and let it investigate service health, query metrics, search logs, trace requests, and inspect LLM application spans across your infrastructure.
 
 > This repository is public primarily so [Justos](https://justos.com.br) team members can install it via internal tooling. External use is welcome under the ISC license but not actively supported — issues and PRs may sit untriaged.
 
@@ -129,6 +129,8 @@ search_logs({ query: "service:api error" })  // uses default org
 | `get_log_field_values` | Discover possible values for a log field (service, status, etc.) |
 | `list_spans` | Search APM spans with query filters and time range |
 | `get_trace` | Get all spans for a trace ID showing the full request flow |
+| `search_llmobs_spans` | Search LLM Observability spans by ML app, span kind, tags, query, and time range (preview API) |
+| `get_llmobs_trace` | Get all LLM Observability spans for a trace ID, ordered chronologically (preview API) |
 
 ## Available Prompts
 
@@ -155,7 +157,9 @@ All tools are read-only. To auto-approve them in Claude Code, add to `~/.claude/
       "mcp__datadog__aggregate_logs",
       "mcp__datadog__get_log_field_values",
       "mcp__datadog__list_spans",
-      "mcp__datadog__get_trace"
+      "mcp__datadog__get_trace",
+      "mcp__datadog__search_llmobs_spans",
+      "mcp__datadog__get_llmobs_trace"
     ]
   }
 }
@@ -170,6 +174,8 @@ Create a scoped Application Key with the following minimum permissions:
 - `metrics_read`
 - `monitors_read`
 - `services_catalog_read` (or equivalent)
+
+The `search_llmobs_spans` and `get_llmobs_trace` tools call Datadog's LLM Observability spans-events API, which is currently a **preview** endpoint (path and response shape may change). Reading LLM Observability data may require an additional LLM Observability read permission on the Application Key — see the [Datadog role permissions](https://docs.datadoghq.com/account_management/rbac/permissions/) reference for the exact scope.
 
 ## Development
 

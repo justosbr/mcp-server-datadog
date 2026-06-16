@@ -19,6 +19,8 @@ import { aggregateLogs } from "./tools/aggregate-logs.js";
 import { getLogFieldValues } from "./tools/get-log-field-values.js";
 import { listSpans } from "./tools/list-spans.js";
 import { getTrace } from "./tools/get-trace.js";
+import { searchLlmobsSpans } from "./tools/search-llmobs-spans.js";
+import { getLlmobsTrace } from "./tools/get-llmobs-trace.js";
 
 // Import all prompts
 import { investigateServicePrompt } from "./prompts/investigate-service.js";
@@ -34,7 +36,7 @@ const server = new McpServer({
   version: "0.1.0",
 });
 
-// Register all 11 tools
+// Register all 13 tools
 const tools = [
   listMonitors,
   getMonitor,
@@ -47,6 +49,8 @@ const tools = [
   getLogFieldValues,
   listSpans,
   getTrace,
+  searchLlmobsSpans,
+  getLlmobsTrace,
 ];
 
 for (const tool of tools) {
@@ -60,7 +64,11 @@ for (const tool of tools) {
         isError: true,
       });
     }
-    return tool.handler(params as Record<string, unknown>, config) as Promise<CallToolResult>;
+    return tool.handler(
+      params as Record<string, unknown>,
+      config,
+      multiOrg.orgEnvs.get(orgName)
+    ) as Promise<CallToolResult>;
   });
 }
 
