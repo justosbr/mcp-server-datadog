@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { client, v2 } from "@datadog/datadog-api-client";
-import { ToolDefinition, FORMAT_SCHEMA } from "./types.js";
+import { ToolDefinition, FORMAT_SCHEMA, fromTimeSchema, toTimeSchema } from "./types.js";
 import { formatError, errorContent } from "../utils/errors.js";
 import { parseTimeRange } from "../utils/time.js";
 import { spanFields, formatDurationMs } from "../utils/spans.js";
@@ -12,14 +12,8 @@ const schema = {
     .describe(
       "Datadog span query, e.g. 'service:payments AND operation_name:http.request AND status:error'"
     ),
-  from: z
-    .string()
-    .optional()
-    .describe("Start time — ISO 8601 or relative. Default: 15m"),
-  to: z
-    .string()
-    .optional()
-    .describe("End time — ISO 8601 or relative. Default: now"),
+  from: fromTimeSchema("15m"),
+  to: toTimeSchema(),
   limit: z.coerce.number().default(50).describe("Max spans to return. Default: 50"),
   cursor: z
     .string()

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { client } from "@datadog/datadog-api-client";
-import { ToolDefinition, FORMAT_SCHEMA } from "./types.js";
+import { ToolDefinition, FORMAT_SCHEMA, fromTimeSchema, toTimeSchema } from "./types.js";
 import type { DatadogEnv } from "../config.js";
 import { formatError, errorContent } from "../utils/errors.js";
 import { parseTimeRange } from "../utils/time.js";
@@ -30,18 +30,8 @@ const schema = {
     .record(z.string())
     .optional()
     .describe('Tag filters as key/value pairs, e.g. {"env":"prod"}.'),
-  from: z
-    .string()
-    .optional()
-    .describe(
-      "Start time — ISO 8601 (e.g. '2026-06-16T10:00:00Z') or relative ('15m', '2h', '7d'). Default: 15m"
-    ),
-  to: z
-    .string()
-    .optional()
-    .describe(
-      "End time — ISO 8601 (e.g. '2026-06-16T10:00:00Z') or relative ('15m', '2h', '7d'). Default: now"
-    ),
+  from: fromTimeSchema("15m"),
+  to: toTimeSchema(),
   limit: z.coerce
     .number()
     .int()
