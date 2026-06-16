@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { client } from "@datadog/datadog-api-client";
+import type { DatadogEnv } from "../config.js";
 
 export interface ToolDefinition {
   name: string;
@@ -7,7 +8,8 @@ export interface ToolDefinition {
   schema: z.ZodRawShape;
   handler: (
     params: Record<string, unknown>,
-    config: client.Configuration
+    config: client.Configuration,
+    env?: DatadogEnv
   ) => Promise<ToolResult>;
 }
 

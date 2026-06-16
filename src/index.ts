@@ -60,7 +60,11 @@ for (const tool of tools) {
         isError: true,
       });
     }
-    return tool.handler(params as Record<string, unknown>, config) as Promise<CallToolResult>;
+    return tool.handler(
+      params as Record<string, unknown>,
+      config,
+      multiOrg.orgEnvs.get(orgName)
+    ) as Promise<CallToolResult>;
   });
 }
 
