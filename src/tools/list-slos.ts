@@ -2,8 +2,7 @@ import { z } from "zod";
 import { client, v1 } from "@datadog/datadog-api-client";
 import { ToolDefinition, FORMAT_SCHEMA } from "./types.js";
 import { formatError, errorContent } from "../utils/errors.js";
-
-const JSON_BUDGET = 25_000;
+import { budgetedJson } from "../utils/json-budget.js";
 
 const schema = {
   query: z
@@ -42,18 +41,11 @@ async function handler(params: Record<string, unknown>, config: client.Configura
     }
 
     if (format === "json") {
-      const kept: any[] = [];
-      let size = 0;
-      for (const slo of data) {
-        const entrySize = JSON.stringify(slo).length;
-        if (kept.length > 0 && size + entrySize > JSON_BUDGET) break;
-        kept.push(slo);
-        size += entrySize;
-      }
-      let text = JSON.stringify({ data: kept, metadata: response.metadata }, null, 2);
-      if (kept.length < data.length) {
-        text += `\n\n[Output truncated: showing ${kept.length} of ${data.length} SLOs (~${JSON_BUDGET / 1000}KB cap). Narrow with query/tags or use format:summary.]`;
-      }
+      const text = budgetedJson(data, (kept, truncated) => ({
+        data: kept,
+        metadata: response.metadata,
+        ...(truncated ? { truncated } : {}),
+      }));
       return { content: [{ type: "text" as const, text }] };
     }
 

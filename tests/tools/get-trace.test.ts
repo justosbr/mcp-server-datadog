@@ -171,11 +171,12 @@ describe("get_trace", () => {
     );
 
     expect(result.isError).toBeUndefined();
-    const text = result.content[0].text;
-    expect(text).toContain("[Output truncated: showing");
-    expect(text).toContain("of 50 spans");
-    expect(text).toContain("svc-0");
-    expect(text).not.toContain("svc-49");
+    const text = result.content[0].text as string;
+    const parsed = JSON.parse(text); // valid JSON even when truncated
+    expect(parsed.truncated.total).toBe(50);
+    expect(parsed.truncated.shown).toBeLessThan(50);
+    expect(parsed.data.length).toBe(parsed.truncated.shown);
+    expect(parsed.data[0].attributes.service).toBe("svc-0");
   });
 
   it("returns friendly message when trace not found", async () => {
