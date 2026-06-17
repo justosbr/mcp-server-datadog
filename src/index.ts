@@ -26,6 +26,9 @@ import { searchErrorIssues } from "./tools/search-error-issues.js";
 import { getErrorIssue } from "./tools/get-error-issue.js";
 import { listSlos } from "./tools/list-slos.js";
 import { getSloStatus } from "./tools/get-slo-status.js";
+import { searchRumEvents } from "./tools/search-rum-events.js";
+import { aggregateRumEvents } from "./tools/aggregate-rum-events.js";
+import { listRumApplications } from "./tools/list-rum-applications.js";
 
 // Import all prompts
 import { investigateServicePrompt } from "./prompts/investigate-service.js";
@@ -41,7 +44,7 @@ const server = new McpServer({
   version: "0.1.0",
 });
 
-// Register all 18 tools
+// Register all tools
 const tools = [
   listMonitors,
   getMonitor,
@@ -61,6 +64,9 @@ const tools = [
   getErrorIssue,
   listSlos,
   getSloStatus,
+  searchRumEvents,
+  aggregateRumEvents,
+  listRumApplications,
 ];
 
 for (const tool of tools) {
