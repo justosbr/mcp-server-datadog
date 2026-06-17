@@ -122,10 +122,11 @@ describe("search_logs", () => {
     );
 
     expect(result.isError).toBeUndefined();
-    const text = result.content[0].text;
-    expect(text).toContain("Output truncated");
-    expect(text).toContain("of 20 logs");
-    expect(text).toContain("meta.page.after");
+    const text = result.content[0].text as string;
+    const parsed = JSON.parse(text); // valid JSON even when truncated
+    expect(parsed.truncated.total).toBe(20);
+    expect(parsed.truncated.shown).toBeLessThan(20);
+    expect(parsed.data.length).toBe(parsed.truncated.shown);
     expect(text.length).toBeLessThan(30_000);
   });
 

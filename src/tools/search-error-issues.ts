@@ -3,9 +3,9 @@ import { client, v2 } from "@datadog/datadog-api-client";
 import { ToolDefinition, FORMAT_SCHEMA, fromTimeSchema, toTimeSchema } from "./types.js";
 import { formatError, errorContent } from "../utils/errors.js";
 import { parseTimeRange } from "../utils/time.js";
+import { budgetedJson } from "../utils/json-budget.js";
 
 const TRACKS = ["trace", "logs", "rum"] as const;
-const JSON_BUDGET = 25_000;
 
 const schema = {
   query: z
@@ -76,25 +76,16 @@ async function handler(params: Record<string, unknown>, config: client.Configura
     }
 
     if (format === "json") {
-      const kept: any[] = [];
-      let size = 0;
-      for (const r of results) {
-        const entrySize = JSON.stringify(r).length;
-        if (kept.length > 0 && size + entrySize > JSON_BUDGET) break;
-        kept.push(r);
-        size += entrySize;
-      }
-      // Prune included[] to only the issues referenced by the retained results.
-      const keptIssueIds = new Set(
-        kept.map((r) => r?.relationships?.issue?.data?.id).filter(Boolean)
-      );
-      const included = ((response.included as any[]) ?? []).filter(
-        (i) => i?.type === "issue" && keptIssueIds.has(i.id)
-      );
-      let text = JSON.stringify({ data: kept, included }, null, 2);
-      if (kept.length < results.length) {
-        text += `\n\n[Output truncated: showing ${kept.length} of ${results.length} issues (~${JSON_BUDGET / 1000}KB cap). Narrow the query or use format:summary.]`;
-      }
+      const text = budgetedJson(results, (kept, truncated) => {
+        // Prune included[] to only the issues referenced by the retained results.
+        const keptIssueIds = new Set(
+          kept.map((r: any) => r?.relationships?.issue?.data?.id).filter(Boolean)
+        );
+        const included = ((response.included as any[]) ?? []).filter(
+          (i) => i?.type === "issue" && keptIssueIds.has(i.id)
+        );
+        return { data: kept, included, ...(truncated ? { truncated } : {}) };
+      });
       return { content: [{ type: "text" as const, text }] };
     }
 

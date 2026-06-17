@@ -6,12 +6,12 @@ import { formatError, errorContent } from "../utils/errors.js";
 import { parseTimeRange } from "../utils/time.js";
 import { llmobsSearchSpans } from "../utils/llmobs-http.js";
 import { formatLlmobsSpanLine } from "../utils/llmobs.js";
+import { budgetedJson } from "../utils/json-budget.js";
 
 const SPAN_KINDS = [
   "agent", "workflow", "llm", "tool", "task", "embedding", "retrieval",
 ] as const;
 const MAX_LIMIT = 200;
-const JSON_BUDGET = 25_000;
 
 const schema = {
   query: z
@@ -93,19 +93,11 @@ async function handler(
     }
 
     if (format === "json") {
-      const kept: any[] = [];
-      let size = 0;
-      for (const span of data) {
-        const entrySize = JSON.stringify(span).length;
-        if (kept.length > 0 && size + entrySize > JSON_BUDGET) break;
-        kept.push(span);
-        size += entrySize;
-      }
-      const out = { data: kept, meta: response.meta };
-      let text = JSON.stringify(out, null, 2);
-      if (kept.length < data.length) {
-        text += `\n\n[Output truncated: showing ${kept.length} of ${data.length} spans (~${JSON_BUDGET / 1000}KB cap). Narrow the time window with from/to, or use format:summary.]`;
-      }
+      const text = budgetedJson(data, (kept, truncated) => ({
+        data: kept,
+        meta: response.meta,
+        ...(truncated ? { truncated } : {}),
+      }));
       return { content: [{ type: "text" as const, text }] };
     }
 
