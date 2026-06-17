@@ -42,9 +42,17 @@ async function handler(params: Record<string, unknown>, config: client.Configura
     }
 
     if (format === "json") {
-      let text = JSON.stringify(response, null, 2);
-      if (text.length > JSON_BUDGET) {
-        text = text.slice(0, JSON_BUDGET) + `\n\n[Output truncated at ~${JSON_BUDGET / 1000}KB. Narrow with query/tags or use format:summary.]`;
+      const kept: any[] = [];
+      let size = 0;
+      for (const slo of data) {
+        const entrySize = JSON.stringify(slo).length;
+        if (kept.length > 0 && size + entrySize > JSON_BUDGET) break;
+        kept.push(slo);
+        size += entrySize;
+      }
+      let text = JSON.stringify({ data: kept, metadata: response.metadata }, null, 2);
+      if (kept.length < data.length) {
+        text += `\n\n[Output truncated: showing ${kept.length} of ${data.length} SLOs (~${JSON_BUDGET / 1000}KB cap). Narrow with query/tags or use format:summary.]`;
       }
       return { content: [{ type: "text" as const, text }] };
     }

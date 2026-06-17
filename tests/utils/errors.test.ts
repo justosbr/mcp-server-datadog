@@ -15,6 +15,14 @@ describe("formatError", () => {
     expect(result).toContain("rate limit");
   });
 
+  it("formats an SDK ApiException (code + body.errors), not just httpStatusCode", () => {
+    // The Datadog SDK throws ApiException with `code` and a `body`, not `httpStatusCode`.
+    const error = { code: 403, body: { errors: ["forbidden: missing scope"] } };
+    const result = formatError(error, "search_error_issues");
+    expect(result).toContain("Permission denied for search_error_issues");
+    expect(result).toContain("forbidden: missing scope");
+  });
+
   it("formats unknown errors with the message", () => {
     const error = new Error("Something went wrong");
     const result = formatError(error, "query_metrics");
