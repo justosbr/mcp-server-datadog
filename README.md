@@ -131,6 +131,11 @@ search_logs({ query: "service:api error" })  // uses default org
 | `get_trace` | Get all spans for a trace ID showing the full request flow |
 | `search_llmobs_spans` | Search LLM Observability spans by ML app, span kind, tags, query, and time range (preview API) |
 | `get_llmobs_trace` | Get all LLM Observability spans for a trace ID, ordered chronologically (preview API) |
+| `search_events` | Search the Datadog Events stream (deploys, monitor alerts, change events) by query and time range |
+| `search_error_issues` | Search Error Tracking issues (grouped errors) with counts, impacted users, and regression versions |
+| `get_error_issue` | Get full detail for a single Error Tracking issue by ID |
+| `list_slos` | List SLOs with type, target thresholds, and tags |
+| `get_slo_status` | Get an SLO's attained SLI, uptime, and error budget remaining over a window |
 
 ## Available Prompts
 
@@ -159,7 +164,12 @@ All tools are read-only. To auto-approve them in Claude Code, add to `~/.claude/
       "mcp__datadog__list_spans",
       "mcp__datadog__get_trace",
       "mcp__datadog__search_llmobs_spans",
-      "mcp__datadog__get_llmobs_trace"
+      "mcp__datadog__get_llmobs_trace",
+      "mcp__datadog__search_events",
+      "mcp__datadog__search_error_issues",
+      "mcp__datadog__get_error_issue",
+      "mcp__datadog__list_slos",
+      "mcp__datadog__get_slo_status"
     ]
   }
 }
@@ -176,6 +186,8 @@ Create a scoped Application Key with the following minimum permissions:
 - `services_catalog_read` (or equivalent)
 
 The `search_llmobs_spans` and `get_llmobs_trace` tools call Datadog's LLM Observability spans-events API, which is currently a **preview** endpoint (path and response shape may change). Reading LLM Observability data may require an additional LLM Observability read permission on the Application Key — see the [Datadog role permissions](https://docs.datadoghq.com/account_management/rbac/permissions/) reference for the exact scope.
+
+The Error Tracking, Events, and SLO tools (`search_error_issues`, `get_error_issue`, `search_events`, `list_slos`, `get_slo_status`) read those products' APIs. Error Tracking requires the `error_tracking_read` permission on the Application Key; Events and SLO reads may require their respective read permissions. Check the [Datadog role permissions](https://docs.datadoghq.com/account_management/rbac/permissions/) reference for exact scope names rather than assuming.
 
 ## Development
 
