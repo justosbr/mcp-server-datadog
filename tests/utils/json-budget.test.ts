@@ -10,6 +10,19 @@ describe("budgetedJson", () => {
     expect(parsed.truncated).toBeUndefined();
   });
 
+  it("keeps at least one item even when it alone exceeds the budget", () => {
+    const huge = { blob: "x".repeat(10_000) };
+    const text = budgetedJson(
+      [huge, { a: 1 }],
+      (kept, truncated) => ({ data: kept, ...(truncated ? { truncated } : {}) }),
+      1_000
+    );
+    const parsed = JSON.parse(text);
+    expect(parsed.data).toHaveLength(1);
+    expect(parsed.truncated.shown).toBe(1);
+    expect(parsed.truncated.total).toBe(2);
+  });
+
   it("caps to whole items and embeds a parseable truncated summary when over budget", () => {
     const big = "x".repeat(2000);
     const items = Array.from({ length: 50 }, (_, i) => ({ i, big }));
