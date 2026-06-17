@@ -21,6 +21,11 @@ import { listSpans } from "./tools/list-spans.js";
 import { getTrace } from "./tools/get-trace.js";
 import { searchLlmobsSpans } from "./tools/search-llmobs-spans.js";
 import { getLlmobsTrace } from "./tools/get-llmobs-trace.js";
+import { searchEvents } from "./tools/search-events.js";
+import { searchErrorIssues } from "./tools/search-error-issues.js";
+import { getErrorIssue } from "./tools/get-error-issue.js";
+import { listSlos } from "./tools/list-slos.js";
+import { getSloStatus } from "./tools/get-slo-status.js";
 
 // Import all prompts
 import { investigateServicePrompt } from "./prompts/investigate-service.js";
@@ -36,7 +41,7 @@ const server = new McpServer({
   version: "0.1.0",
 });
 
-// Register all 13 tools
+// Register all 18 tools
 const tools = [
   listMonitors,
   getMonitor,
@@ -51,6 +56,11 @@ const tools = [
   getTrace,
   searchLlmobsSpans,
   getLlmobsTrace,
+  searchEvents,
+  searchErrorIssues,
+  getErrorIssue,
+  listSlos,
+  getSloStatus,
 ];
 
 for (const tool of tools) {
