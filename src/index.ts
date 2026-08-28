@@ -24,6 +24,7 @@ import { getLlmobsTrace } from "./tools/get-llmobs-trace.js";
 import { searchEvents } from "./tools/search-events.js";
 import { searchErrorIssues } from "./tools/search-error-issues.js";
 import { getErrorIssue } from "./tools/get-error-issue.js";
+import { updateErrorIssueState } from "./tools/update-error-issue-state.js";
 import { listSlos } from "./tools/list-slos.js";
 import { getSloStatus } from "./tools/get-slo-status.js";
 import { searchRumEvents } from "./tools/search-rum-events.js";
@@ -62,6 +63,7 @@ const tools = [
   searchEvents,
   searchErrorIssues,
   getErrorIssue,
+  updateErrorIssueState,
   listSlos,
   getSloStatus,
   searchRumEvents,
