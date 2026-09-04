@@ -23,6 +23,28 @@ describe("formatError", () => {
     expect(result).toContain("forbidden: missing scope");
   });
 
+  it("names the required scope on a 403 for a tool whose scope is known", () => {
+    const error = { code: 403, body: { errors: ["Forbidden"] } };
+    const result = formatError(error, "query_metrics");
+    expect(result).toContain("timeseries_query");
+  });
+
+  it("renders JSON:API error objects rather than stringifying them", () => {
+    // Some endpoints answer with `{status, title, detail}` entries even where the
+    // published schema declares an array of strings.
+    const error = {
+      code: 400,
+      body: {
+        errors: [
+          { status: "400", title: "Bad Request", detail: "issue_id must be a UUID" },
+        ],
+      },
+    };
+    const result = formatError(error, "get_error_issue");
+    expect(result).toContain("Bad Request: issue_id must be a UUID");
+    expect(result).not.toContain("[object Object]");
+  });
+
   it("formats unknown errors with the message", () => {
     const error = new Error("Something went wrong");
     const result = formatError(error, "query_metrics");

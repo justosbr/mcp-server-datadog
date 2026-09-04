@@ -187,7 +187,8 @@ Create a scoped Application Key with the following minimum permissions:
 
 - `logs_read_data`
 - `apm_read`
-- `metrics_read`
+- `metrics_read` (metric and tag discovery — `list_metrics`, `get_metric_tags`)
+- `timeseries_query` (time-series metric queries — `query_metrics`)
 - `monitors_read`
 - `services_catalog_read` (or equivalent)
 
