@@ -23,12 +23,14 @@ import { listServices } from "../../src/tools/list-services.js";
 
 const fakeConfig = new client.Configuration();
 
+// The API client deserializes the schema's `dd-service` key to `ddService`, so
+// this is the shape the handler is handed for a live response.
 const sampleServices = {
   data: [
     {
       attributes: {
         schema: {
-          "dd-service": "payments-api",
+          ddService: "payments-api",
           team: "payments",
           description: "Handles payment processing",
           links: [
@@ -40,7 +42,7 @@ const sampleServices = {
     {
       attributes: {
         schema: {
-          "dd-service": "auth-service",
+          ddService: "auth-service",
           team: "platform",
           description: "Authentication and authorization",
         },
@@ -69,6 +71,19 @@ describe("list_services", () => {
     expect(text).toContain("auth-service");
     expect(text).toContain("payments");
     expect(text).toContain("platform");
+    expect(text).not.toContain("unknown");
+  });
+
+  it("names services carrying the raw hyphenated schema key", async () => {
+    mockListServiceDefinitions.mockResolvedValue({
+      data: [{ attributes: { schema: { "dd-service": "billing-api" } } }],
+    });
+
+    const result = await listServices.handler({ format: "summary" }, fakeConfig);
+
+    const text = result.content[0].text;
+    expect(text).toContain("billing-api");
+    expect(text).not.toContain("unknown");
   });
 
   it("returns friendly message when no services found", async () => {

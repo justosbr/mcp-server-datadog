@@ -6,7 +6,12 @@ import { formatError, errorContent } from "../utils/errors.js";
 const schema = {
   issueId: z
     .string()
-    .describe("The Error Tracking issue ID (from search_error_issues results)."),
+    .describe(
+      "The Error Tracking issue ID — a UUID such as '0e53b6fc-4310-11f0-badf-da7ad0900002'. " +
+        "Run search_error_issues and take the value of the `id=` field at the end of the " +
+        "issue's line (in `format: json`, `relationships.issue.data.id`). A bare number is " +
+        "not an issue ID and is rejected as an invalid request."
+    ),
   format: FORMAT_SCHEMA,
 };
 

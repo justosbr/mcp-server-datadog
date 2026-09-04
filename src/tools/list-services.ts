@@ -48,7 +48,9 @@ async function handler(
     // Summary format
     const lines = services.map((s: any) => {
       const schema = s.attributes?.schema;
-      const name = schema?.["dd-service"] ?? "unknown";
+      // The API client deserializes the schema's `dd-service` key to `ddService`
+      // in every schema version; the hyphenated key is what raw API JSON carries.
+      const name = schema?.ddService ?? schema?.["dd-service"] ?? "unknown";
       const team = schema?.team ? ` (team: ${schema.team})` : "";
       const description = schema?.description
         ? ` — ${schema.description}`
