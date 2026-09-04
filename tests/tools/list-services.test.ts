@@ -86,6 +86,26 @@ describe("list_services", () => {
     expect(text).not.toContain("unknown");
   });
 
+  it("prefers the deserialized name when both key forms are present", async () => {
+    // The two names share no substring, so each assertion can only be satisfied
+    // by the key form it names.
+    mockListServiceDefinitions.mockResolvedValue({
+      data: [
+        {
+          attributes: {
+            schema: { ddService: "orders-api", "dd-service": "legacy-orders" },
+          },
+        },
+      ],
+    });
+
+    const result = await listServices.handler({ format: "summary" }, fakeConfig);
+
+    const text = result.content[0].text;
+    expect(text).toContain("orders-api");
+    expect(text).not.toContain("legacy-orders");
+  });
+
   it("returns friendly message when no services found", async () => {
     mockListServiceDefinitions.mockResolvedValue({ data: [] });
 
