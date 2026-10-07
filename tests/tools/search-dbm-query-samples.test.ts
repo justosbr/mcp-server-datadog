@@ -48,6 +48,7 @@ describe("search_dbm_query_samples", () => {
 
     const [url, opts] = fetchMock.mock.calls[0];
     expect(url).toBe("https://app.datadoghq.com/api/v1/logs-analytics/list?type=databasequery");
+    expect(opts.headers["DD-API-KEY"]).toBe("api-123");
     expect(opts.headers["DD-APPLICATION-KEY"]).toBe("app-456");
     expect(JSON.parse(opts.body)).toEqual({
       list: {

@@ -9,6 +9,7 @@ import { normalizeSite } from "./llmobs-http.js";
  */
 const DBM_LIST_PATH = "/api/v1/logs-analytics/list?type=databasequery";
 const REQUEST_TIMEOUT_MS = 30_000;
+const MAX_ERROR_BODY_CHARS = 500;
 
 export interface DbmListRequest {
   query: string;
@@ -46,14 +47,23 @@ export async function dbmListEvents(env: DatadogEnv, request: DbmListRequest): P
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
-  const text = await response.text().catch(() => "");
-
   if (!response.ok) {
+    const text = await response.text().catch(() => "");
     const error = new Error(
-      `Database Monitoring API returned ${response.status}: ${text}`
+      `Database Monitoring API returned ${response.status}: ${excerpt(text)}`
     ) as DbmHttpError;
     error.httpStatusCode = response.status;
     throw error;
+  }
+
+  let text: string;
+  try {
+    text = await response.text();
+  } catch (cause) {
+    const reason = cause instanceof Error ? cause.message : String(cause);
+    throw new Error(
+      `Database Monitoring API returned ${response.status} but reading the body failed: ${reason}`
+    );
   }
 
   if (text.trim() === "") return [];
@@ -63,18 +73,30 @@ export async function dbmListEvents(env: DatadogEnv, request: DbmListRequest): P
     parsed = JSON.parse(text);
   } catch {
     throw new Error(
-      `Database Monitoring API returned ${response.status} with a non-JSON body: ` +
-        text.slice(0, 200)
+      `Database Monitoring API returned ${response.status} with a non-JSON body: ${excerpt(text)}`
     );
   }
-  const events = parsed?.result?.events;
-  if (!Array.isArray(events)) {
+
+  // A `result` object without `events` is an empty match set (Datadog's own
+  // sample client defaults the key to []); anything without a `result` object,
+  // such as `{"errors": [...]}`, is an error.
+  const result = parsed?.result;
+  if (!result || typeof result !== "object" || Array.isArray(result)) {
     throw new Error(
-      `Database Monitoring API returned ${response.status} without result.events: ` +
-        text.slice(0, 200)
+      `Database Monitoring API returned ${response.status} without a result object: ${excerpt(text)}`
     );
   }
-  return events;
+  if (result.events === undefined) return [];
+  if (!Array.isArray(result.events)) {
+    throw new Error(
+      `Database Monitoring API returned ${response.status} with a non-array result.events: ${excerpt(text)}`
+    );
+  }
+  return result.events;
+}
+
+function excerpt(text: string): string {
+  return text.length > MAX_ERROR_BODY_CHARS ? text.slice(0, MAX_ERROR_BODY_CHARS) + "..." : text;
 }
 
 /**

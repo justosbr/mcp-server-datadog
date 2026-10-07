@@ -57,7 +57,7 @@ async function handler(
     return errorContent("search_dbm_query_samples: no Datadog credentials resolved for this org.");
   }
 
-  const querySignature = params.query_signature as string | undefined;
+  const querySignature = (params.query_signature as string | undefined)?.toLowerCase();
   const extra = params.query as string | undefined;
   const from = params.from as string | undefined;
   const to = params.to as string | undefined;

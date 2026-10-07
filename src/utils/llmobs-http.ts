@@ -54,14 +54,23 @@ export async function llmobsSearchSpans(
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
-  const text = await response.text().catch(() => "");
-
   if (!response.ok) {
+    const text = await response.text().catch(() => "");
     const error = new Error(
       `LLM Observability API returned ${response.status}: ${text}`
     ) as LlmobsHttpError;
     error.httpStatusCode = response.status;
     throw error;
+  }
+
+  let text: string;
+  try {
+    text = await response.text();
+  } catch (cause) {
+    const reason = cause instanceof Error ? cause.message : String(cause);
+    throw new Error(
+      `LLM Observability API returned ${response.status} but reading the body failed: ${reason}`
+    );
   }
 
   // A 2xx with an empty body (e.g. 204) is treated as no results.

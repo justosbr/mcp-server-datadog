@@ -15,9 +15,13 @@ function statusOf(error: { httpStatusCode?: unknown; code?: unknown }): number |
  */
 const TOOL_SCOPE: Record<string, string> = {
   query_metrics: "timeseries_query",
-  search_dbm_query_samples: "built_in_features",
-  get_dbm_explain_plans: "built_in_features",
 };
+
+/**
+ * Tools whose endpoint refuses every scoped Application Key, whatever scopes or
+ * permissions it carries, so the 403 asks for an unscoped key instead of a scope.
+ */
+const UNSCOPED_KEY_TOOLS = new Set(["search_dbm_query_samples", "get_dbm_explain_plans"]);
 
 /**
  * Render one entry of an API error body's `errors` array. Datadog serves plain
@@ -59,6 +63,14 @@ export function formatError(error: unknown, toolName: string): string {
 
     switch (statusCode) {
       case 403: {
+        if (UNSCOPED_KEY_TOOLS.has(toolName)) {
+          return (
+            `Permission denied for ${toolName}. ` +
+            `This endpoint only accepts an unscoped Application Key: a scoped key is refused even with DBM read permissions. ` +
+            `Use an unscoped Application Key (https://app.datadoghq.com/organization-settings/application-keys). ` +
+            `Details: ${message}`
+          );
+        }
         const scope = TOOL_SCOPE[toolName];
         return (
           `Permission denied for ${toolName}. ` +

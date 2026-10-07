@@ -8,7 +8,7 @@ import { buildDbmQuery, dbmListEvents, toEpochMs } from "../utils/dbm-http.js";
 import { budgetedJson } from "../utils/json-budget.js";
 
 const MAX_LIMIT = 50;
-const PLAN_PREVIEW_CHARS = 1500;
+const PLAN_PREVIEW_CHARS = 500;
 
 const schema = {
   query_signature: z
@@ -66,7 +66,7 @@ async function handler(
     return errorContent("get_dbm_explain_plans: no Datadog credentials resolved for this org.");
   }
 
-  const querySignature = params.query_signature as string;
+  const querySignature = (params.query_signature as string).toLowerCase();
   const extra = params.query as string | undefined;
   const from = (params.from as string | undefined) ?? "4h";
   const to = params.to as string | undefined;

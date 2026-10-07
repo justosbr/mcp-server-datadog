@@ -202,7 +202,7 @@ The Error Tracking, Events, and SLO tools (`search_error_issues`, `get_error_iss
 
 The RUM tools (`search_rum_events`, `aggregate_rum_events`, `list_rum_applications`) read the RUM API and require the `rum_apps_read` permission on the Application Key.
 
-The Database Monitoring tools (`search_dbm_query_samples`, `get_dbm_explain_plans`) call the logs analytics list endpoint on the `databasequery` index (`POST https://app.<DD_SITE>/api/v1/logs-analytics/list?type=databasequery`), as documented in Datadog's [Building applications with the Database Monitoring API](https://docs.datadoghq.com/database_monitoring/guide/build_apps_with_dbm_api/) guide. That endpoint is not part of the OpenAPI spec and requires the `built_in_features` scope, which Datadog only grants to **unscoped** Application Keys, so expect a 403 from these two tools with a scoped key. DBM query metrics (`postgresql.queries.*`, `mysql.queries.*`) need no extra tool: read them with `query_metrics`.
+The Database Monitoring tools (`search_dbm_query_samples`, `get_dbm_explain_plans`) call the logs analytics list endpoint on the `databasequery` index (`POST https://app.<DD_SITE>/api/v1/logs-analytics/list?type=databasequery`), as documented in Datadog's [Building applications with the Database Monitoring API](https://docs.datadoghq.com/database_monitoring/guide/build_apps_with_dbm_api/) guide. That endpoint is not part of the OpenAPI spec and requires the `built_in_features` scope, which Datadog only grants to **unscoped** Application Keys. A scoped key is refused with a 403 even when it carries `dbm_read`, so configure an unscoped key for these two tools. DBM query metrics (`postgresql.queries.*`, `mysql.queries.*`) need no extra tool: read them with `query_metrics`.
 
 ## Development
 
