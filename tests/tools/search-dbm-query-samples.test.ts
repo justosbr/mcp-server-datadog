@@ -66,4 +66,16 @@ describe("search_dbm_query_samples", () => {
       "[sig 44c22fe3377aff9b] [wait Lock/relation] [rows 3] SELECT * FROM policies WHERE id = ?"
     );
   });
+
+  it("rejects an extra query that breaks out of the dbm_type filter", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const res = await searchDbmQuerySamples.handler(
+      { query: "*) OR dbm_type:plan OR (*" },
+      fakeConfig,
+      env
+    );
+    expect(res.isError).toBe(true);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

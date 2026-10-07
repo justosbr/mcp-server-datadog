@@ -68,13 +68,39 @@ export async function dbmListEvents(env: DatadogEnv, request: DbmListRequest): P
     );
   }
   const events = parsed?.result?.events;
-  return Array.isArray(events) ? events : [];
+  if (!Array.isArray(events)) {
+    throw new Error(
+      `Database Monitoring API returned ${response.status} without result.events: ` +
+        text.slice(0, 200)
+    );
+  }
+  return events;
+}
+
+/**
+ * Reject extra filters that could escape the parenthesized group: unbalanced
+ * parentheses, or a `dbm_type:` term (the tool sets the record type itself).
+ */
+function assertSafeExtraQuery(extra: string): void {
+  if (/\bdbm_type\s*:/i.test(extra)) {
+    throw new Error(
+      `Invalid query "${extra}": do not filter on dbm_type; the tool sets the record type.`
+    );
+  }
+  let depth = 0;
+  for (const ch of extra) {
+    if (ch === "(") depth++;
+    else if (ch === ")" && --depth < 0) break;
+  }
+  if (depth !== 0) {
+    throw new Error(`Invalid query "${extra}": parentheses are unbalanced.`);
+  }
 }
 
 /**
  * Build the `databasequery` search string: the record type, an optional
- * `@db.query_signature` filter, and the caller's extra filters parenthesized so
- * a top-level OR in them cannot escape the type filter.
+ * `@db.query_signature` filter, and the caller's extra filters, validated and
+ * parenthesized so a top-level OR in them cannot escape the type filter.
  */
 export function buildDbmQuery(
   dbmType: "activity" | "plan",
@@ -83,7 +109,10 @@ export function buildDbmQuery(
 ): string {
   const parts = [`dbm_type:${dbmType}`];
   if (querySignature) parts.push(`@db.query_signature:${querySignature}`);
-  if (extra && extra.trim()) parts.push(`(${extra.trim()})`);
+  if (extra && extra.trim()) {
+    assertSafeExtraQuery(extra.trim());
+    parts.push(`(${extra.trim()})`);
+  }
   return parts.join(" ");
 }
 

@@ -64,4 +64,22 @@ describe("get_dbm_explain_plans", () => {
     expect(res.isError).toBe(true);
     expect(res.content[0].text).toContain("`built_in_features`");
   });
+
+  it("surfaces a 2xx body without result.events as an error, not as no matches", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ errors: ["invalid query"] }),
+      })
+    );
+    const res = await getDbmExplainPlans.handler(
+      { query_signature: "44c22fe3377aff9b" },
+      fakeConfig,
+      env
+    );
+    expect(res.isError).toBe(true);
+    expect(res.content[0].text).toContain("invalid query");
+  });
 });
