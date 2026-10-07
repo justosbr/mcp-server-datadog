@@ -139,6 +139,8 @@ search_logs({ query: "service:api error" })  // uses default org
 | `search_rum_events` | Search RUM events (views, actions, errors, resources) with query filters, time range, and pagination |
 | `aggregate_rum_events` | Run analytics on RUM events (count, avg, sum, min, max with grouping) |
 | `list_rum_applications` | List RUM applications with their names, application IDs, and types |
+| `search_dbm_query_samples` | Search Database Monitoring query samples (normalized SQL, query signature, wait event) by signature, service, env, host, or instance |
+| `get_dbm_explain_plans` | Get Database Monitoring explain plans (plan signature, cost, plan definition) for a query signature |
 
 ## Available Prompts
 
@@ -175,7 +177,9 @@ All tools are read-only. To auto-approve them in Claude Code, add to `~/.claude/
       "mcp__datadog__get_slo_status",
       "mcp__datadog__search_rum_events",
       "mcp__datadog__aggregate_rum_events",
-      "mcp__datadog__list_rum_applications"
+      "mcp__datadog__list_rum_applications",
+      "mcp__datadog__search_dbm_query_samples",
+      "mcp__datadog__get_dbm_explain_plans"
     ]
   }
 }
@@ -197,6 +201,8 @@ The `search_llmobs_spans` and `get_llmobs_trace` tools call Datadog's LLM Observ
 The Error Tracking, Events, and SLO tools (`search_error_issues`, `get_error_issue`, `search_events`, `list_slos`, `get_slo_status`) read those products' APIs. Error Tracking requires the `error_tracking_read` permission on the Application Key; Events and SLO reads may require their respective read permissions. Check the [Datadog role permissions](https://docs.datadoghq.com/account_management/rbac/permissions/) reference for exact scope names rather than assuming.
 
 The RUM tools (`search_rum_events`, `aggregate_rum_events`, `list_rum_applications`) read the RUM API and require the `rum_apps_read` permission on the Application Key.
+
+The Database Monitoring tools (`search_dbm_query_samples`, `get_dbm_explain_plans`) call the logs analytics list endpoint on the `databasequery` index (`POST https://app.<DD_SITE>/api/v1/logs-analytics/list?type=databasequery`), as documented in Datadog's [Building applications with the Database Monitoring API](https://docs.datadoghq.com/database_monitoring/guide/build_apps_with_dbm_api/) guide. That endpoint is not part of the OpenAPI spec and requires the `built_in_features` scope, which Datadog only grants to **unscoped** Application Keys, so expect a 403 from these two tools with a scoped key. DBM query metrics (`postgresql.queries.*`, `mysql.queries.*`) need no extra tool: read them with `query_metrics`.
 
 ## Development
 

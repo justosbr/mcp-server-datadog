@@ -15,12 +15,13 @@ interface LlmobsHttpError extends Error {
 
 /**
  * DD_SITE must be a bare site suffix (e.g. "datadoghq.com", "us3.datadoghq.com",
- * "datadoghq.eu", "ddog-gov.com"). The base host is built as `https://api.{site}`,
- * matching the SDK's own `{subdomain}.{site}` server template. Reject schemes,
- * paths, ports, whitespace, and api/app/www subdomains — anything that would
- * produce a wrong host when prefixed with "api.". Returns the normalized site.
+ * "datadoghq.eu", "ddog-gov.com"). The base host is built as `https://{subdomain}.{site}`
+ * (e.g. "api.", "app."), matching the SDK's own `{subdomain}.{site}` server
+ * template. Reject schemes, paths, ports, whitespace, and api/app/www subdomains:
+ * anything that would produce a wrong host when prefixed with a subdomain.
+ * Returns the normalized site.
  */
-function normalizeSite(site: string): string {
+export function normalizeSite(site: string): string {
   const trimmed = site.trim();
   const looksLikeBareSite =
     /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(trimmed) &&

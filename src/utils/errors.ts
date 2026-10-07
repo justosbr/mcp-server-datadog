@@ -15,6 +15,8 @@ function statusOf(error: { httpStatusCode?: unknown; code?: unknown }): number |
  */
 const TOOL_SCOPE: Record<string, string> = {
   query_metrics: "timeseries_query",
+  search_dbm_query_samples: "built_in_features",
+  get_dbm_explain_plans: "built_in_features",
 };
 
 /**
