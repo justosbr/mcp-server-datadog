@@ -30,6 +30,8 @@ import { getSloStatus } from "./tools/get-slo-status.js";
 import { searchRumEvents } from "./tools/search-rum-events.js";
 import { aggregateRumEvents } from "./tools/aggregate-rum-events.js";
 import { listRumApplications } from "./tools/list-rum-applications.js";
+import { searchDbmQuerySamples } from "./tools/search-dbm-query-samples.js";
+import { getDbmExplainPlans } from "./tools/get-dbm-explain-plans.js";
 
 // Import all prompts
 import { investigateServicePrompt } from "./prompts/investigate-service.js";
@@ -69,6 +71,8 @@ const tools = [
   searchRumEvents,
   aggregateRumEvents,
   listRumApplications,
+  searchDbmQuerySamples,
+  getDbmExplainPlans,
 ];
 
 for (const tool of tools) {
