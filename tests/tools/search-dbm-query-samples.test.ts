@@ -67,15 +67,13 @@ describe("search_dbm_query_samples", () => {
     );
   });
 
-  it("rejects an extra query that breaks out of the dbm_type filter", async () => {
+  it("rejects extra queries that could break out of the dbm_type filter", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    const res = await searchDbmQuerySamples.handler(
-      { query: "*) OR dbm_type:plan OR (*" },
-      fakeConfig,
-      env
-    );
-    expect(res.isError).toBe(true);
+    for (const query of ["*) OR dbm_type:plan OR (*", '"(" *) OR * OR (* ")"']) {
+      const res = await searchDbmQuerySamples.handler({ query }, fakeConfig, env);
+      expect(res.isError, query).toBe(true);
+    }
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

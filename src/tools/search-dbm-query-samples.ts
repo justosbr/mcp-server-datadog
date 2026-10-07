@@ -23,7 +23,7 @@ const schema = {
     .optional()
     .describe(
       "Extra Datadog search filters, e.g. 'service:payments env:prod', 'host:db-1', " +
-        "'@db.instance:<instance>'. ANDed with the query-sample type filter."
+        "'@db.instance:<instance>'. ANDed with the query-sample type filter; no parentheses (combine terms with AND/OR/-)."
     ),
   from: fromTimeSchema("15m"),
   to: toTimeSchema(),

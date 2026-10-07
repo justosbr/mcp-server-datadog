@@ -23,7 +23,7 @@ const schema = {
     .optional()
     .describe(
       "Extra Datadog search filters, e.g. 'env:prod', '@db.instance:<instance>'. " +
-        "ANDed with the explain-plan type and signature filters."
+        "ANDed with the explain-plan type and signature filters; no parentheses (combine terms with AND/OR/-)."
     ),
   from: fromTimeSchema("4h"),
   to: toTimeSchema(),

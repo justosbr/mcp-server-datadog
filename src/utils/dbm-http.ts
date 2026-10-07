@@ -78,29 +78,24 @@ export async function dbmListEvents(env: DatadogEnv, request: DbmListRequest): P
 }
 
 /**
- * Reject extra filters that could escape the parenthesized group: unbalanced
- * parentheses, or a `dbm_type:` term (the tool sets the record type itself).
+ * Reject any parenthesis in the extra filters. The tool wraps them in its own
+ * group, and a `)` (even one that looks quoted) could close that group early
+ * and escape the `dbm_type` filter.
  */
 function assertSafeExtraQuery(extra: string): void {
-  if (/\bdbm_type\s*:/i.test(extra)) {
+  if (/[()]/.test(extra)) {
     throw new Error(
-      `Invalid query "${extra}": do not filter on dbm_type; the tool sets the record type.`
+      `Invalid query "${extra}": parentheses are not allowed in the extra filter; ` +
+        `the tool already groups it, so combine terms with AND/OR/-.`
     );
-  }
-  let depth = 0;
-  for (const ch of extra) {
-    if (ch === "(") depth++;
-    else if (ch === ")" && --depth < 0) break;
-  }
-  if (depth !== 0) {
-    throw new Error(`Invalid query "${extra}": parentheses are unbalanced.`);
   }
 }
 
 /**
  * Build the `databasequery` search string: the record type, an optional
- * `@db.query_signature` filter, and the caller's extra filters, validated and
- * parenthesized so a top-level OR in them cannot escape the type filter.
+ * `@db.query_signature` filter, and the caller's extra filters, which must not
+ * contain parentheses and are wrapped in a group so a top-level OR in them
+ * cannot escape the type filter.
  */
 export function buildDbmQuery(
   dbmType: "activity" | "plan",
